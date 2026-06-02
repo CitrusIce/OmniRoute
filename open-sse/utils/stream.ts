@@ -1259,8 +1259,13 @@ export function createSSEStream(options: StreamOptions = {}) {
                 // bootstrap chunk (assistant role + empty content) before emitting proper
                 // `response.*` events. That chunk is invalid on /v1/responses and breaks strict
                 // clients like OpenCode, so drop it only for Responses-native consumers.
+                const stripIgnorableBootstrapText = (value: string): string =>
+                  value.replace(/[\u200B-\u200D\u2060\uFEFF]/g, "");
+
                 const hasActiveDeltaValue = (value: unknown): boolean => {
-                  if (typeof value === "string") return value.length > 0;
+                  if (typeof value === "string") {
+                    return stripIgnorableBootstrapText(value).length > 0;
+                  }
                   if (Array.isArray(value)) return value.some((entry) => hasActiveDeltaValue(entry));
                   if (value && typeof value === "object") {
                     return Object.values(value).some((entry) => hasActiveDeltaValue(entry));
